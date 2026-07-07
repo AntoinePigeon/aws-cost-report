@@ -22,10 +22,16 @@ def generate_data():
     data = []
 
     for day in dates:
+        date_str = day.strftime("%Y-%m-%d")
         for service in services:
             factor = random.uniform(0.8, 1.2)
             cost = base_costs[service] * factor
-            data.append({"date": day.strftime("%Y-%m-%d"), "service": service, "cost": round(cost, 2)})
+
+            # Planting the spike (for anomaly detection)
+            if service == "Amazon EC2" and date_str == "2026-02-15":
+                cost = cost * 6
+
+            data.append({"date": date_str, "service": service, "cost": round(cost, 2)})
 
     df = pd.DataFrame(data)
     df.to_csv("data/cost_data.csv", index=False)
