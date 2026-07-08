@@ -37,9 +37,29 @@ def find_anomalies(dataframe, threshold=3):
         found.append(spikes)
     return pd.concat(found)
 
+def cost_concentration(dataframe):
+    totals = spend_by_service(dataframe)
+    grand_total = totals.sum()
+    return (totals / grand_total * 100).round(1)
+
+def focus_areas(dataframe, min_percent=25):
+    concentration = cost_concentration(dataframe)
+    return concentration[concentration > min_percent]
+
+def monthly_growth(dataframe):
+    dataframe = dataframe.copy()
+    dataframe["month"] = dataframe["date"].dt.strftime("%Y-%m")
+    pivot = dataframe.pivot_table(
+        index="service",
+        columns="month",
+        values="cost",
+        aggfunc="sum",
+    )
+    return (pivot.pct_change(axis=1) * 100).round(1)
 
 if __name__ == "__main__":
     df = load_data("data/cost_data.csv")
     print("Total:", total_spend(df))
-    print("\nBy service:\n", spend_by_service(df))
+    print("\nConcentration (%):\n", cost_concentration(df))
+    print("\nMonthly growth (%):\n", monthly_growth(df))
     print("\nAnomalies:\n", find_anomalies(df))
